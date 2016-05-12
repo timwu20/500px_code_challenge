@@ -2,7 +2,19 @@
 {% block body %}
 	<div id="photos">
 	{% for photo in photos %}
-		<img id="{{ photo.id }}" class="ui centered image" src="{{ photo.image_url }}" alt="{{ photo.name }}" />
+		<div class="ui image" id="{{ photo.id }}" data-id="{{ photo.id }}">
+
+			<img src="{{ photo.image_url }}" alt="{{ photo.name }}" />
+
+			<div class="ui dimmer">
+				<div class="content">
+				<div class="center">					 
+          			<p><i class="heart icon"></i> <span class="likes">{{ photo.positive_votes_count }}</span></p>
+					<button data-vote-url="{{ url_for('like', photo_id=photo.id) }}" data-delete-vote-url="{{ url_for('delete_like', photo_id=photo.id) }}" class="like ui inverted button">Like</button>
+				</div>
+				</div>
+			</div>
+		</div>
 
 	{% endfor %}
 	</div>
