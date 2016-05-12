@@ -16,6 +16,7 @@ CONSUMER_SECRET = 'SWVn3TDH6d0GjBRoe1eySab3H52JJ4ipDGjCVnGi'
 
 base_url = 'https://api.500px.com/v1/'
 
+'''
 oauth = OAuth()
 
 _500px = oauth.remote_app('500px',
@@ -27,7 +28,6 @@ _500px = oauth.remote_app('500px',
     consumer_secret=CONSUMER_SECRET,
 )
 
-'''
 @_500px.tokengetter
 def get_500px_token(token=None):
     return session.get('500px_token')
@@ -35,13 +35,6 @@ def get_500px_token(token=None):
 
 @app.route('/')
 def index():
-    '''
-    if get_500px_token():
-        flash('hello logged in user')
-    else:
-        flash( 'Hello World! Please login' )
-    '''
-
     params = {
         'feature': 'popular',
         'rpp': 100,
@@ -61,7 +54,7 @@ def index():
             if 'photos' in data:
                 photos = data['photos']
                 app.logger.debug('filled cache with photos')
-                cache.set('photos', photos)
+                cache.set('photos', photos, timeout=60)
             else:
                 raise Exception('No photos found in data')
 
