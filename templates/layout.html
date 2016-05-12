@@ -1,12 +1,29 @@
-<!doctype html>
-<title>500px Code Challenge</title>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
-{% block body %}{% endblock %}
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>500px Code Challenge</title>
+
+		<link rel="stylesheet" type="text/css" href="/static/semantic/dist/semantic.min.css">
+		<link rel="stylesheet" type="text/css" href="/static/css/styles.css">
+	</head>
+
+	<body>
+		{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			<ul id="messages" class="flashes">
+			{% for message in messages %}
+				<li>{{ message }}</li>
+			{% endfor %}
+			</ul>
+		{% endif %}
+		{% endwith %}
+
+		<div class="ui container" id="content">
+		{% block body %}
+		{% endblock %}
+		</div>
+
+		<script src="/static/semantic/dist/semantic.min.js"></script>
+	</body>
+</html>

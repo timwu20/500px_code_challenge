@@ -4,9 +4,12 @@ app = Flask(__name__)
 # for sessions
 app.secret_key = b'\xdf\xf6\xfd\xb8\xdcI\xa85n\x10\x03\x88\x12\\\xc1\xb4\x80\x8f\x18@\x83{\xe1\xa5'
 
-
-from flask_oauthlib.client import OAuth
 from flask import session, redirect, url_for, request, flash, render_template
+from flask_oauthlib.client import OAuth
+import requests
+from werkzeug.contrib.cache import SimpleCache
+
+cache = SimpleCache()
 
 CONSUMER_KEY = '6cHA4hgqzBWhVEQXMtdVdjIPZTT9N7zi7Cw3wGjR'
 CONSUMER_SECRET = 'SWVn3TDH6d0GjBRoe1eySab3H52JJ4ipDGjCVnGi'
@@ -24,19 +27,56 @@ _500px = oauth.remote_app('500px',
     consumer_secret=CONSUMER_SECRET,
 )
 
+'''
 @_500px.tokengetter
 def get_500px_token(token=None):
-	return session.get('500px_token')
+    return session.get('500px_token')
+'''
 
 @app.route('/')
 def index():
-	if get_500px_token():
-		flash('hello logged in user')
-	else:
-	    flash( 'Hello World! Please login' )
+    '''
+    if get_500px_token():
+        flash('hello logged in user')
+    else:
+        flash( 'Hello World! Please login' )
+    '''
 
-	return render_template('index.html')
+    params = {
+        'feature': 'popular',
+        'rpp': 100,
+        'image_size': 4,
+        'consumer_key': CONSUMER_KEY,
+    }
+    r = requests.get('https://api.500px.com/v1/photos', params=params)
 
+    photos = cache.get('photos')
+    if not photos:
+        app.logger.debug('photos not found in cache, fetching from 500px')
+        try: 
+            # will throw exception if not 200
+            r.raise_for_status()
+
+            data = r.json()
+            if 'photos' in data:
+                photos = data['photos']
+                app.logger.debug('filled cache with photos')
+                cache.set('photos', photos)
+            else:
+                raise Exception('No photos found in data')
+
+        except Exception as e:
+            flash ('Something went wrong getting photos from 500px: %s' % e)
+            photos = []
+    else:
+        app.logger.debug('photos fetched from cache')
+
+    context = {
+            'photos': photos,
+        }
+    return render_template('index.html', **context)
+
+'''
 @app.route('/login')
 def login():
     return _500px.authorize(callback=url_for('oauth_authorized',
@@ -58,6 +98,7 @@ def oauth_authorized():
 
     flash('You were successfully signed in')
     return redirect(next_url)
+'''
 
 if __name__ == '__main__':
     app.run(debug=True)

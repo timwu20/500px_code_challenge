@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 {% block body %}
-  <h1>Overview</h1>
-  <p>Do you want to <a href="{{ url_for('login') }}">log in?</a>
+	<div id="photos">
+	{% for photo in photos %}
+		<img id="{{ photo.id }}" class="ui centered image" src="{{ photo.image_url }}" alt="{{ photo.name }}" />
+
+	{% endfor %}
+	</div>
 {% endblock %}
