@@ -7,6 +7,7 @@ app.secret_key = b'\xdf\xf6\xfd\xb8\xdcI\xa85n\x10\x03\x88\x12\\\xc1\xb4\x80\x8f
 from flask import session, redirect, url_for, request, flash, render_template, jsonify
 from flask_oauthlib.client import OAuth, OAuthException
 import requests
+from requests.exceptions import RequestException
 from werkzeug.contrib.cache import SimpleCache
 
 cache = SimpleCache()
@@ -58,8 +59,12 @@ def index():
             else:
                 raise Exception('No photos found in data')
 
-        except Exception as e:
+        except RequestException as e:
             flash ('Something went wrong getting photos from 500px: %s' % e, 'negative')
+            photos = []
+
+        except Exception as e:
+            flash ('Something not connection related went wrong: %s' % e, 'negative')
             photos = []
 
     else:

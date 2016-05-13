@@ -27,11 +27,13 @@ class AppTestCase(unittest.TestCase):
         rv = self.app.get('/')
         assert b'Boom' in rv.data
         assert b'<div id="photos">' in rv.data
+        assert b'Something not connection related went wrong' in rv.data
 
         mock_requests_get.side_effect = Timeout('Boom Timeout')
         rv = self.app.get('/')
         assert b'Boom Timeout' in rv.data
         assert b'<div id="photos">' in rv.data
+        assert b'Something went wrong getting photos from 500px' in rv.data
 
     def test_login(self):
         rv = self.app.get('/login')
@@ -46,6 +48,7 @@ class AppTestCase(unittest.TestCase):
         #fake oauth_token and oauth_verifier
         rv = self.app.get('/oauth-authorized?next=http%3A%2F%2Flocalhost%3A5000%2F&oauth_token=jPjY8uDc2V529FZLiFZWReBR1iWdHT5iGsbwYuV1&oauth_verifier=4a5UStJ9bfIBr2qqnE01', follow_redirects=True)
         assert '200' in rv.status
+
         assert b'Something went wrong trying to login to 500px.' in rv.data
 
     @mock.patch('flask_oauthlib.client.OAuthRemoteApp.authorized_response')
