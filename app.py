@@ -5,7 +5,7 @@ app = Flask(__name__)
 app.secret_key = b'\xdf\xf6\xfd\xb8\xdcI\xa85n\x10\x03\x88\x12\\\xc1\xb4\x80\x8f\x18@\x83{\xe1\xa5'
 
 from flask import session, redirect, url_for, request, flash, render_template, jsonify
-from flask_oauthlib.client import OAuth
+from flask_oauthlib.client import OAuth, OAuthException
 import requests
 from werkzeug.contrib.cache import SimpleCache
 
@@ -71,26 +71,36 @@ def index():
 
 @app.route('/like/<photo_id>', methods=['POST'])
 def like(photo_id):
-    r = _500px.post('photos/%s/vote' % photo_id, data={
-        'vote': 1,
-    })
+    try:
+        r = _500px.post('photos/%s/vote' % photo_id, data={
+            'vote': 1,
+        })
+        json = r.data
 
-    json = r.data
-
-    #purge index cache
-    cache.delete('photos')
+        #purge index cache
+        cache.delete('photos')
+    except OAuthException as e:
+        json = {
+            'error': '%s' % e
+        }
 
     return jsonify( **json )
 
 @app.route('/delete-like/<photo_id>', methods=['POST'])
 def delete_like(photo_id):
-    r = _500px.delete('photos/%s/vote' % photo_id)
+    try:
+        r = _500px.delete('photos/%s/vote' % photo_id)
 
-    json = r.data
+        json = r.data
 
-    #purge index cache
-    cache.delete('photos')
-    
+        #purge index cache
+        cache.delete('photos')
+        
+    except OAuthException as e:
+        json = {
+            'error': '%s' % e
+        }
+
     return jsonify( **json )
 
 
@@ -113,9 +123,13 @@ def oauth_authorized():
     resp = _500px.authorized_response()
 
     if resp is None:
-        flash(u'You denied the request to sign in.')
+        flash('You denied the request to sign in.', 'negative')
         return redirect(next_url)
 
+    if isinstance(resp, OAuthException):
+        flash('Something went wrong trying to login to 500px.', 'negative')
+        return redirect(next_url) 
+    
     session['500px_token'] = (
         resp['oauth_token'],
         resp['oauth_token_secret']
