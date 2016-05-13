@@ -7,3 +7,8 @@ To run install dependancies in requirements.txt
 then run server using python 3.4+
 
 `python app.py`
+
+to run the tests
+
+`python app_tests.py`
+
