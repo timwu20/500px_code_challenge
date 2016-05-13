@@ -7,12 +7,10 @@ from requests.exceptions import Timeout
 class AppTestCase(unittest.TestCase):
 
     def setUp(self):
-        #print('setUp')
         app.app.config['TESTING'] = True
         self.app = app.app.test_client()
 
     def tearDown(self):
-        #print('tearDown')
         pass
 
     def test_index(self):
