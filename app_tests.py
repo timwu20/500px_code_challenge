@@ -2,6 +2,7 @@ import app
 import unittest
 from unittest import mock
 import flask_oauthlib
+from requests.exceptions import Timeout
 
 class AppTestCase(unittest.TestCase):
 
@@ -16,6 +17,20 @@ class AppTestCase(unittest.TestCase):
 
     def test_index(self):
         rv = self.app.get('/')
+        assert b'<div id="photos">' in rv.data
+
+    @mock.patch('requests.get')
+    def test_index_mock(self, mock_requests_get):
+        app.cache.set('photos', None)
+        mock_requests_get.side_effect = Exception('Boom')
+
+        rv = self.app.get('/')
+        assert b'Boom' in rv.data
+        assert b'<div id="photos">' in rv.data
+
+        mock_requests_get.side_effect = Timeout('Boom Timeout')
+        rv = self.app.get('/')
+        assert b'Boom Timeout' in rv.data
         assert b'<div id="photos">' in rv.data
 
     def test_login(self):

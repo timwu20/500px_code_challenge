@@ -40,12 +40,13 @@ def index():
         'image_size': 4,
         'consumer_key': CONSUMER_KEY,
     }
-    r = requests.get('https://api.500px.com/v1/photos', params=params)
-
+    
     photos = cache.get('photos')
+
     if not photos:
         app.logger.debug('photos not found in cache, fetching from 500px')
         try: 
+            r = requests.get('https://api.500px.com/v1/photos', params=params)
             # will throw exception if not 200
             r.raise_for_status()
 
@@ -60,6 +61,7 @@ def index():
         except Exception as e:
             flash ('Something went wrong getting photos from 500px: %s' % e, 'negative')
             photos = []
+
     else:
         app.logger.debug('photos fetched from cache')
 
@@ -95,7 +97,7 @@ def delete_like(photo_id):
 
         #purge index cache
         cache.delete('photos')
-        
+
     except OAuthException as e:
         json = {
             'error': '%s' % e
