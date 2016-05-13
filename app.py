@@ -41,12 +41,12 @@ def index():
         'image_size': 4,
         'consumer_key': CONSUMER_KEY,
     }
-    r = requests.get('https://api.500px.com/v1/photos', params=params)
-
+    
     photos = cache.get('photos')
     if not photos:
         app.logger.debug('photos not found in cache, fetching from 500px')
-        try: 
+        try:
+            r = requests.get('https://api.500px.com/v1/photos', params=params)
             # will throw exception if not 200
             r.raise_for_status()
 
