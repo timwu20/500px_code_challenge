@@ -1,4 +1,14 @@
 {% extends "layout.html" %}
+
+{% macro render_pagination(pagination) %}
+	<div class="pagination">
+	{% if pagination.has_next %}
+		<input type="hidden" id="next" value="{{ url_for_other_page(pagination.page + 1)
+		  }}">
+	{% endif %}
+	</div>
+{% endmacro %}
+
 {% block body %}
 	<div id="photos">
 	{% for photo in photos %}
@@ -18,4 +28,6 @@
 
 	{% endfor %}
 	</div>
+	{{ render_pagination(pagination) }}
+
 {% endblock %}

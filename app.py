@@ -4,11 +4,14 @@ app = Flask(__name__)
 # for sessions
 app.secret_key = b'\xdf\xf6\xfd\xb8\xdcI\xa85n\x10\x03\x88\x12\\\xc1\xb4\x80\x8f\x18@\x83{\xe1\xa5'
 
-from flask import session, redirect, url_for, request, flash, render_template, jsonify
+from flask import session, redirect, url_for, request, flash, render_template, jsonify, abort
 from flask_oauthlib.client import OAuth, OAuthException
 import requests
 from requests.exceptions import RequestException
 from werkzeug.contrib.cache import SimpleCache
+from pagination import Pagination
+
+PAGINATION_PER_PAGE = 20
 
 cache = SimpleCache()
 
@@ -16,8 +19,6 @@ CONSUMER_KEY = '6cHA4hgqzBWhVEQXMtdVdjIPZTT9N7zi7Cw3wGjR'
 CONSUMER_SECRET = 'SWVn3TDH6d0GjBRoe1eySab3H52JJ4ipDGjCVnGi'
 
 base_url = 'https://api.500px.com/v1/'
-
-
 oauth = OAuth()
 
 _500px = oauth.remote_app('500px',
@@ -29,12 +30,20 @@ _500px = oauth.remote_app('500px',
     consumer_secret=CONSUMER_SECRET,
 )
 
+def url_for_other_page(page):
+    args = request.view_args.copy()
+    args['page'] = page
+    return url_for(request.endpoint, **args)
+    
+app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+
 @_500px.tokengetter
 def get_500px_token(token=None):
     return session.get('500px_token')
 
-@app.route('/')
-def index():
+@app.route('/', defaults={'page': 1})
+@app.route('/page/<int:page>')
+def index(page):
     params = {
         'feature': 'popular',
         'rpp': 100,
@@ -70,9 +79,26 @@ def index():
     else:
         app.logger.debug('photos fetched from cache')
 
+    start = (page-1) * PAGINATION_PER_PAGE
+    end = (page) * (PAGINATION_PER_PAGE)
+
+    if start > len(photos):
+        abort(404)
+    elif end > len(photos):
+        end = len(photos)
+    elif start < 0:
+        abort(404)
+
+    app.logger.debug( '%s %s' % (start, end) )
+
+    pagination = Pagination(page, PAGINATION_PER_PAGE, len(photos))
+
+    photos = photos[ start: end ]
+
     context = {
             'photos': photos,
             'authenticated': False if not get_500px_token() else get_500px_token(),
+            'pagination': pagination,
         }
     return render_template('index.html', **context)
 

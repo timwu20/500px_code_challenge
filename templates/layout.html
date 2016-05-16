@@ -93,7 +93,7 @@
 			  on: 'hover'
 			});
 
-			$('#photos .ui.image button.like').click( function(e){
+			$(document).on('click', '#photos .ui.image button.like', function(e){
 				e.preventDefault();
 
 				var elem = $(this).parents('.ui.image')[0];
@@ -120,9 +120,7 @@
 						$(button).addClass('loading');
 					},
 					success: function(data){
-						console.log( data, 'photo' in data );
 						if ('photo' in data){
-
 							$('.likes', elem).transition('scale', function(){
 								$('.likes', elem).text( data.photo.positive_votes_count );
 								$('.likes', elem).transition('scale');
@@ -140,6 +138,50 @@
 					}
 				});
 			});
+
+			loadMorePhotos = function(){
+				var loading_html = '<div class="ui active centered small inline loader"></div>';
+				
+				var next_url = $('#next', '.pagination');
+				if (next_url.length > 0){
+					next_url = next_url.val();
+
+					$('.pagination').append( loading_html );
+
+					$.ajax({
+			            method: "GET",
+			            url: next_url,
+			            dataType: "html",
+			            beforeSend: function(){
+			               $('.pagination').append( loading_html );
+			            },
+			            success: function(html, textStatus, xhr){
+			               $('#photos').append( $('#photos', html).html() );
+			               $('.pagination').replaceWith( $('.pagination', html) );
+			               
+			               $('.ui.image').dimmer({
+			               		'on':'hover'
+			               	});
+			            }
+			        });
+				}
+			}
+			initInfiniteScroll = function(){
+				console.log('init infinite scroll');
+
+				$('#photos').visibility({
+					once: false,
+					// update size when new content loads
+				    observeChanges: true,
+					onBottomVisible: function(calculations){
+						loadMorePhotos();
+					}
+				})
+			}
+		});
+
+		$(window).load(function(){
+			initInfiniteScroll();
 		});
 		</script>
 	</body>
