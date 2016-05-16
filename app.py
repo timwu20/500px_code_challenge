@@ -89,8 +89,6 @@ def index(page):
     elif start < 0:
         abort(404)
 
-    app.logger.debug( '%s %s' % (start, end) )
-
     pagination = Pagination(page, PAGINATION_PER_PAGE, len(photos))
 
     photos = photos[ start: end ]
